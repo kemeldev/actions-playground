@@ -1,0 +1,27 @@
+name: 03 jobs are separate machines
+on:
+  workflow_dispatch:
+jobs:
+  job-a:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Write a file
+        run: |
+          echo "secret recipe" > /tmp/shared.txt
+          echo "Wrote /tmp/shared.txt on $(hostname)"
+      - name: Same job, same machine, file is there
+        run: cat /tmp/shared.txt
+  job-b:
+      runs-on: ubuntu-latest
+      timeout-minutes: 5
+      steps:
+        - name: Different job, different machine
+          run: echo "I am $(hostname)"
+        - name: Try to read job-a's file
+          run: |
+            if cat /tmp/shared.txt; then
+              echo "UNEXPECTED: found it"
+            else
+              echo "EXPECTED: no such file - separate machines"
+            fi
