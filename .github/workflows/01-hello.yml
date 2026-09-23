@@ -1,0 +1,17 @@
+name: 01 hello
+on:
+  workflow_dispatch:
+jobs:
+  say-hello:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Print a greeting
+        run: echo "Hello from a GitHub-hosted runner"
+      - name: Show where we are
+        run: |
+          echo "Hostname: $(hostname)"
+          echo "User: $(whoami)"
+          echo "Working directory: $(pwd)"
+          echo "Disk:"
+          df -h / | tail -1
