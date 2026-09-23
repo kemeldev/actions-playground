@@ -1,0 +1,45 @@
+name: 02 triggers
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      who:
+        description: "Who to greet"
+        required: false
+        default: "kemel"
+        type: string
+      loudly:
+        description: "Shout it"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: What triggered me
+        run: |
+          echo "Event name : ${{ github.event_name }}"
+          echo "Ref        : ${{ github.ref }}"
+          echo "SHA        : ${{ github.sha }}"
+          echo "Actor      : ${{ github.actor }}"
+          echo "Run number : ${{ github.run_number }}"
+
+      - name: Dispatch inputs (empty unless manually triggered)
+        run: |
+          echo "who    = '${{ inputs.who }}'"
+          echo "loudly = '${{ inputs.loudly }}'"
+
+      - name: Prove the code is here
+        run: ls -la && git log --oneline -3
