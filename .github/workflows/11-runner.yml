@@ -1,0 +1,34 @@
+name: 11 runner inspection
+
+on:
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Hardware
+        run: |
+          echo "CPUs: $(nproc)"
+          free -h
+          df -h /
+          echo "Arch: $(uname -m)"
+
+      - name: OS
+        run: |
+          cat /etc/os-release | head -3
+          uname -r
+
+      - name: Preinstalled toolchain
+        run: |
+          for t in docker git curl jq aws az gcloud terraform kubectl helm node npm python3 pip3 go java make; do
+            printf "%-12s " "$t"
+            command -v $t >/dev/null 2>&1 && ($t --version 2>&1 | head -1) || echo "NOT INSTALLED"
+          done
+
+      - name: Docker specifically
+        run: |
+          docker version --format '{{.Server.Version}}'
+          docker buildx version
+          docker compose version
