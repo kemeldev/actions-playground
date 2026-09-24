@@ -14,17 +14,17 @@ jobs:
         run: echo "$CONTEXT_JSON" | head -60
         env:
           CONTEXT_JSON: ${{ toJSON(github) }}
-- name: Dump the runner context
+      - name: Dump the runner context
         run: echo '${{ toJSON(runner) }}'
-- name: Environment variables, three ways
+      - name: Environment variables, three ways
         env:
           STEP_LEVEL: "hello from step-level env"
         run: |
           echo "workflow : $GREETING"
           echo "job      : $JOB_LEVEL"
           echo "step     : $STEP_LEVEL"
-          echo "built-in : $GITHUB_REPOSITORY / run $GITHUB_RUN_ID"
-- name: Expressions are evaluated BEFORE the shell runs
+                echo "built-in : $GITHUB_REPOSITORY / run $GITHUB_RUN_ID"
+      - name: Expressions are evaluated BEFORE the shell runs
         run: |
           echo "This branch is ${{ github.ref_name }}"
           echo "Is it main? ${{ github.ref_name == 'main' }}"
