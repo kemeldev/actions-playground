@@ -1,0 +1,57 @@
+name: 05 fan-out fan-in
+
+on:
+  workflow_dispatch:
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      stamp: ${{ steps.meta.outputs.stamp }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute build metadata
+        id: meta
+        run: |
+          SHORT=$(git rev-parse --short HEAD)
+          echo "tag=sha-$SHORT" >> "$GITHUB_OUTPUT"
+          echo "stamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Show what I computed
+        run: |
+          echo "tag   = ${{ steps.meta.outputs.tag }}"
+          echo "stamp = ${{ steps.meta.outputs.stamp }}"
+
+  test-unit:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: echo "Unit tests for ${{ needs.prepare.outputs.tag }}"
+
+  test-lint:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: echo "Lint for ${{ needs.prepare.outputs.tag }}"
+
+  test-security:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: echo "Security scan for ${{ needs.prepare.outputs.tag }}"
+
+  deploy:
+    needs: [test-unit, test-lint, test-security]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Deploy
+        run: |
+          echo "Deploying ${{ needs.prepare.outputs.tag }}"
+          echo "Built at ${{ needs.prepare.outputs.stamp }}"
