@@ -1,0 +1,43 @@
+name: 10 permissions
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  no-permissions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Try to use the API with no permissions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Trying to list issues..."
+          gh issue list --repo ${{ github.repository }} || echo "DENIED as expected"
+
+  can-read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: read
+    steps:
+      - name: Same call, with read permission
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue list --repo ${{ github.repository }}
+          echo "worked"
+
+      - name: Checkout needs contents:read
+        uses: actions/checkout@v4
+
+      - name: Try to write (not granted)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create --repo ${{ github.repository }} \
+            --title "should fail" --body "no write permission" \
+            || echo "DENIED as expected - we only have read"
