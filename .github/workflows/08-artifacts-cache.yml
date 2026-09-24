@@ -1,0 +1,66 @@
+name: 08 artifacts and cache
+
+on:
+  workflow_dispatch:
+
+jobs:
+  producer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Produce a build output
+        run: |
+          mkdir -p out
+          echo "build of run ${{ github.run_number }}" > out/result.txt
+          date -u >> out/result.txt
+
+      - name: Upload it as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: out/
+          retention-days: 5
+
+      - name: Simulate an expensive dependency install, with cache
+        id: depcache
+        uses: actions/cache@v4
+        with:
+          path: ~/fake-deps
+          key: fake-deps-v1-${{ hashFiles('.github/workflows/08-artifacts-cache.yml') }}
+          restore-keys: |
+            fake-deps-v1-
+
+      - name: Install deps only if cache missed
+        if: steps.depcache.outputs.cache-hit != 'true'
+        run: |
+          echo "CACHE MISS - doing the expensive work"
+          mkdir -p ~/fake-deps
+          for i in $(seq 1 5); do echo "dependency $i" > ~/fake-deps/dep$i.txt; done
+          sleep 15
+
+      - name: Report cache status
+        run: |
+          echo "cache-hit = '${{ steps.depcache.outputs.cache-hit }}'"
+          ls -la ~/fake-deps
+
+  consumer:
+    needs: producer
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download the artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: incoming/
+
+      - name: Read it
+        run: cat incoming/result.txt
+
+      - name: The cache is NOT here
+        run: |
+          if ls ~/fake-deps 2>/dev/null; then
+            echo "cache dir exists"
+          else
+            echo "no cache dir - caches are restored per job, not shared automatically"
+          fi
