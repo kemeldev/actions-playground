@@ -1,0 +1,48 @@
+name: 07 matrix
+
+on:
+  workflow_dispatch:
+    inputs:
+      break_one:
+        description: "Make the python leg fail"
+        type: boolean
+        default: false
+
+jobs:
+  simple:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [api-python, api-node, frontend]
+    steps:
+      - name: Build ${{ matrix.service }}
+        run: |
+          echo "Pretending to build ${{ matrix.service }}"
+          if [ "${{ inputs.break_one }}" = "true" ] && [ "${{ matrix.service }}" = "api-python" ]; then
+            exit 1
+          fi
+          sleep 5
+
+  multi-dimensional:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [api-node, frontend]
+        node: ["20", "22"]
+        include:
+          - service: api-python
+            node: "n/a"
+            note: "python does not use node"
+        exclude:
+          - service: frontend
+            node: "20"
+    steps:
+      - name: ${{ matrix.service }} on node ${{ matrix.node }}
+        run: |
+          echo "service = ${{ matrix.service }}"
+          echo "node    = ${{ matrix.node }}"
+          echo "note    = ${{ matrix.note }}"
