@@ -1,0 +1,57 @@
+name: 06 conditions
+
+on:
+  workflow_dispatch:
+    inputs:
+      should_fail:
+        description: "Make the middle step fail"
+        type: boolean
+        default: false
+
+jobs:
+  conditional-steps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Always first
+        run: echo "starting"
+
+      - name: This might fail
+        run: |
+          if [ "${{ inputs.should_fail }}" = "true" ]; then
+            echo "failing on purpose"
+            exit 1
+          fi
+          echo "succeeded"
+
+      - name: Only on success
+        if: success()
+        run: echo "previous steps were fine"
+
+      - name: Only on failure
+        if: failure()
+        run: echo "something broke - this is where you gather diagnostics"
+
+      - name: Always, even after failure
+        if: always()
+        run: echo "cleanup and log upload go here"
+
+  branch-gated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Only on main
+        if: github.ref_name == 'main'
+        run: echo "we are on main"
+
+      - name: Only for push events
+        if: github.event_name == 'push'
+        run: echo "triggered by a push"
+
+      - name: Never (empty string is falsy)
+        if: ''
+        run: echo "you will not see this"
+
+      - name: ALWAYS runs (the string 'false' is TRUTHY)
+        if: 'false'
+        run: echo "surprise - this ran"
