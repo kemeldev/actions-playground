@@ -1,0 +1,23 @@
+name: 09 concurrency
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  slow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Take a while
+        run: |
+          for i in $(seq 1 12); do
+            echo "working... $i"
+            sleep 5
+          done
+          echo "finished"
